@@ -174,7 +174,8 @@ def convert_column_default(col):
     return ' DEFAULT %s' % default_value if default_value else ''
 
 
-def get_create_table(columns, primary_key_column=None, indexes=None, drop_if_exists=False):
+def get_create_table(columns, primary_key_column=None, indexes=None,
+                     drop_if_exists=False, create_if_not_exists=False):
     columns = sorted(columns, key=lambda x: x[ColumnDesc.ORDINAL_POSITION])
     indexes = indexes or []
     table_name = columns[0][ColumnDesc.TABLE_NAME]
@@ -200,7 +201,10 @@ def get_create_table(columns, primary_key_column=None, indexes=None, drop_if_exi
     for index in indexes:
         unique = 'UNIQUE' if 'unique' in index[1].lower() else ''
         cols.append('%s KEY `%s` (%s)' % (unique, index[0][:64], re.sub("\([+-]+\)", "", index[2])))
-    sql = 'create table `%s` (\n%s);' % (table_name, ',\n'.join(cols))
+    sql = 'CREATE TABLE %s`%s` (\n%s);' %\
+          ('IF NOT EXISTS ' if create_if_not_exists else '',
+           table_name,
+           ',\n'.join(cols))
     if drop_if_exists:
         sql = 'DROP TABLE IF EXISTS %s;\n %s' % (table_name, sql)
     return sql
@@ -258,7 +262,7 @@ def query_table_indexes(table_name):
 
 
 def generate(table_schema=None, table_name=None, table_type=None,
-             drop_if_exists=False):
+             drop_if_exists=False, create_if_not_exists=False):
     tables = filter_tables(table_schema=table_schema, table_name=table_name, table_type=table_type)
     for table in tables:
         table_name = table[2]
@@ -268,7 +272,8 @@ def generate(table_schema=None, table_name=None, table_type=None,
         print get_create_table(columns,
                                indexes=indexes,
                                primary_key_column=primary_key_column,
-                               drop_if_exists=drop_if_exists)
+                               drop_if_exists=drop_if_exists,
+                               create_if_not_exists=create_if_not_exists)
         print
 
 
@@ -292,6 +297,8 @@ def get_args():
                         help='Optional, filter type based on the schema.')
     parser.add_argument('--drop_if_exists', action='store_true', default=False,
                         help='Optional, add the drop table if exists statement.')
+    parser.add_argument('--create_if_not_exists', action='store_true', default=False,
+                        help='Optional, add if not exists in the create statement.')
     return parser.parse_args()
 
 
@@ -302,7 +309,8 @@ def main():
     generate(table_schema=args.table_schema,
              table_name=args.table_name,
              table_type=args.table_type,
-             drop_if_exists=args.drop_if_exists)
+             drop_if_exists=args.drop_if_exists,
+             create_if_not_exists=args.create_if_not_exists)
 
 
 if __name__ == '__main__':

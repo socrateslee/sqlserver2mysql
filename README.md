@@ -29,7 +29,7 @@ usage: sqlserver2mysql.py [-h] [--server SERVER] [--port PORT] --user USER
                           --password PASSWORD --database DATABASE
                           [--table_schema TABLE_SCHEMA]
                           [--table_name TABLE_NAME] [--table_type TABLE_TYPE]
-                          [--drop_if_exists]
+                          [--drop_if_exists] [--create_if_not_exists]
 
 Generate mysql create table and create index statement from a Sql Server.
 
@@ -47,4 +47,6 @@ optional arguments:
   --table_type TABLE_TYPE
                         Optional, filter type based on the schema.
   --drop_if_exists      Optional, add the drop table if exists statement.
+  --create_if_not_exists
+                        Optional, add if not exists in the create statement.
 ```
